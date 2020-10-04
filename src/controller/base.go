@@ -1,24 +1,14 @@
-package main
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"serqol/go-demo/service"
-	"serqol/go-demo/controller"
 )
 
-var utils *service.Utils
-var router *gin.Engine
-var mainController *controller.Main
-
-func main() {
-	router = gin.Default()
-	router.GET("/", mainController.Show)
-	router.Run()
+type BaseController struct {
 }
 
-// TODO: not mine
-func render(c *gin.Context, data gin.H, templateName string) {
+func (controller *BaseController) render (c *gin.Context, data gin.H, templateName string) {
 	loggedInInterface, _ := c.Get("is_logged_in")
 	data["is_logged_in"] = loggedInInterface.(bool)
 
