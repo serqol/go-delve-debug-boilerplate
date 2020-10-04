@@ -3,16 +3,21 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"serqol/go-demo/service"
+	"os"
 	"serqol/go-demo/controller"
 )
 
-var utils *service.Utils
 var router *gin.Engine
-var mainController *controller.Main
+var mainController controller.Main
 
 func main() {
 	router = gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	basePath, err := os.Getwd()
+	if err != nil {
+		// do nothing
+	}
+	router.LoadHTMLGlob(basePath + "/src/templates/*")
 	router.GET("/", mainController.Show)
 	router.Run()
 }
