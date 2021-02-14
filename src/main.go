@@ -18,6 +18,7 @@ func main() {
 	if err != nil {
 		// do nothing
 	}
+	mainController = &controller.Main{Base: &controller.BaseController{}}
 	router.LoadHTMLGlob(basePath + "/templates/*")
 	router.GET("/", mainController.Show)
 	router.Run()

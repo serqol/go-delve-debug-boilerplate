@@ -1,14 +1,15 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type BaseController struct {
 }
 
-func (controller *BaseController) render (c *gin.Context, data gin.H, templateName string) {
+func (controller *BaseController) render(c *gin.Context, data gin.H, templateName string) {
 
 	switch c.Request.Header.Get("Accept") {
 	case "application/json":
