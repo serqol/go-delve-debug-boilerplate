@@ -1,27 +1,43 @@
 package main
 
 import (
-	"fmt"
+	"net/http"
+	"os"
+	"serqol/go-demo/controller"
+
 	"github.com/gin-gonic/gin"
-	"serqol/go-demo/service"
 )
 
-var utils *service.Utils
 var router *gin.Engine
+var mainController *controller.Main
 
 func main() {
-	services := utils.GetTestObjects(10)
-	for key, object := range(services) {
-		fmt.Println(string(key), object)
+	router = gin.Default()
+	gin.SetMode(gin.DebugMode)
+	basePath, err := os.Getwd()
+	if err != nil {
+		// do nothing
 	}
+	mainController = &controller.Main{Base: &controller.BaseController{}}
+	router.LoadHTMLGlob(basePath + "/templates/*")
+	router.GET("/", mainController.Show)
 	router.Run()
 }
 
-type Service struct {
-	id int
-	name string
-}
+// TODO: not mine
+func render(c *gin.Context, data gin.H, templateName string) {
+	loggedInInterface, _ := c.Get("is_logged_in")
+	data["is_logged_in"] = loggedInInterface.(bool)
 
-func buildIndex(collection []interface{}, key string) []interface{} {
-	return collection
+	switch c.Request.Header.Get("Accept") {
+	case "application/json":
+		// Respond with JSON
+		c.JSON(http.StatusOK, data["payload"])
+	case "application/xml":
+		// Respond with XML
+		c.XML(http.StatusOK, data["payload"])
+	default:
+		// Respond with HTML
+		c.HTML(http.StatusOK, templateName, data)
+	}
 }
