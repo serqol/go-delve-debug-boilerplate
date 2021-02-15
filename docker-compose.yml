@@ -3,11 +3,13 @@ services:
   demo:
     build:
       context: ./
+    volumes:
+      - ./src:/src
     networks:
-    - services_default
+    - services
     ports: 
       - 80:8080
       - 40000:40000
 networks:
-  services_default:
+  services:
     external: true
