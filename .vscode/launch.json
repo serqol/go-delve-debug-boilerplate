@@ -19,7 +19,7 @@
             "name": "Golang in-place",
             "type": "go",
             "request": "launch",
-            "mode": "auto",
+            "mode": "debug",
             "program": "${file}",
             "env": {},
             "args": []
