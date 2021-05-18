@@ -1,6 +1,9 @@
 package utils
 
-import "crypto/md5"
+import (
+	"crypto/md5"
+	"encoding/hex"
+)
 
 func GetMapHash(data map[string]string) string {
 	var dataString string
@@ -12,5 +15,5 @@ func GetMapHash(data map[string]string) string {
 
 func hash(data string) string {
 	bytes := md5.Sum([]byte(data))
-	return string(bytes[:])
+	return hex.EncodeToString(bytes[:])
 }
