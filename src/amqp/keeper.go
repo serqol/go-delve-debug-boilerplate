@@ -1,28 +1,37 @@
 package amqp
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"serqol/go-demo/utils"
 	"sync"
+
+	"github.com/streadway/amqp"
 )
 
-var instance *Amqp
+type Amqp struct {
+	connection *amqp.Connection
+}
+
+var instances map[string]*Amqp
 var once sync.Once
 
-func Instance() *Amqp {
+func Instance(configuration map[string]string) *Amqp {
+	configurationHash := utils.GetMapHash(configuration)
+	if _, ok := instances[configurationHash]; ok {
+		return instances[configurationHash]
+	}
 	once.Do(func() {
-		host, user, password := utils.GetEnv("DB_HOST", "postgres"), utils.GetEnv("DB_USER", "postgres"), utils.GetEnv("DB_PASSWORD", "postgres")
-		connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=golang sslmode=disable", host, user, password)
-		connection, err := sql.Open("postgres", connStr)
+		host, user, password, port := configuration['host'], configuration['user'], configuration['password'], configuration['port']
+		connStr := fmt.Sprintf("amqp://%s:%s@%s:%s/", host, user, password, port)
+		connection, err := amqp.Dial(connStr)
 		if err == nil {
 			err = connection.Ping()
 		}
 		if err != nil {
 			log.Fatal(err)
 		}
-		instance = &Database{connection}
+		instances[configurationHash] = &Amqp{connection}
 	})
 	return instance
 }

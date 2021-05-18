@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"serqol/go-demo/database"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,10 +13,6 @@ func Instance() *Main {
 }
 
 func (controller Main) Show(c *gin.Context) {
-	err := database.Instance().Connection.Ping()
-	if err != nil {
-		panic("Database unreachable")
-	}
 	controller.Base.render(c, gin.H{
 		"title": "Hello, me",
 	}, "index.html")
