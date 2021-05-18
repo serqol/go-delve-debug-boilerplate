@@ -20,8 +20,7 @@ func init() {
 	amqpInstance = amqp.Publisher(configuration)
 }
 
-func Log(message string, data map[string]interface{}) {
-	amqpInstance.Publish(map[string]interface{}{
-		"message": message,
-	})
+func Write(body []byte) (n int, err error) {
+	amqpInstance.Publish(body)
+	return 1, nil
 }

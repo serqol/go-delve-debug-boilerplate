@@ -1,9 +1,15 @@
 package utils
 
 import (
+	"encoding/json"
 	"reflect"
 	"strconv"
 )
+
+func ToJson(data map[string]interface{}) string {
+	body, _ := json.Marshal(data)
+	return string(body[:])
+}
 
 func GetTestObjects(count int) map[string]interface{} {
 	var objects []interface{}

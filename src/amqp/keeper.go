@@ -1,7 +1,6 @@
 package amqp
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"serqol/go-demo/utils"
@@ -17,11 +16,7 @@ type Amqp struct {
 	confirmChannel chan amqp.Confirmation
 }
 
-func (instance *Amqp) Publish(data map[string]interface{}) {
-	body, err := json.Marshal(data)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (instance *Amqp) Publish(body []byte) {
 	exchange, queue := instance.configuration["exchange"], instance.configuration["queue"]
 	if err := instance.channel.Publish(
 		exchange,
@@ -30,7 +25,7 @@ func (instance *Amqp) Publish(data map[string]interface{}) {
 		false,
 		amqp.Publishing{
 			Headers:         amqp.Table{},
-			ContentType:     "text/plain",
+			ContentType:     "application/json",
 			ContentEncoding: "",
 			Body:            body,
 			DeliveryMode:    amqp.Persistent,
@@ -39,7 +34,8 @@ func (instance *Amqp) Publish(data map[string]interface{}) {
 	); err != nil {
 		log.Fatal(err)
 	}
-	confirmOne(instance.confirmChannel)
+	// implement delivery tag tracking, for now it doesn't really know which message it acks
+	go confirmOne(instance.confirmChannel)
 }
 
 var instances map[string]*Amqp
@@ -72,7 +68,7 @@ func Publisher(configuration map[string]string) *Amqp {
 		if err := channel.Confirm(false); err != nil {
 			log.Fatal(err)
 		}
-		confirmationChannel := make(chan amqp.Confirmation, 1)
+		confirmationChannel := make(chan amqp.Confirmation, 10000)
 		confirms := channel.NotifyPublish(confirmationChannel)
 		instances[configurationHash] = &Amqp{connection, channel, configuration, confirms}
 	})
