@@ -15,10 +15,13 @@ func init() {
 		"port":          utils.GetEnv("GRAYLOG_PORT", "5672"),
 		"exchange":      utils.GetEnv("GRAYLOG_EXCHANGE", "graylog"),
 		"exchange_type": utils.GetEnv("GRAYLOG_EXCHANGE_TYPE", "direct"),
+		"queue":         utils.GetEnv("GRAYLOG_QUEUE", "graylog"),
 	}
 	amqpInstance = amqp.Publisher(configuration)
 }
 
-func log(info string, data map[string]interface{}) {
-
+func Log(message string, data map[string]interface{}) {
+	amqpInstance.Publish(map[string]interface{}{
+		"message": message,
+	})
 }

@@ -3,7 +3,6 @@ package amqp
 import (
 	"encoding/json"
 	"fmt"
-	"json"
 	"log"
 	"serqol/go-demo/utils"
 	"sync"
@@ -12,9 +11,10 @@ import (
 )
 
 type Amqp struct {
-	connection    *amqp.Connection
-	channel       *amqp.Channel
-	configuration map[string]string
+	connection     *amqp.Connection
+	channel        *amqp.Channel
+	configuration  map[string]string
+	confirmChannel chan amqp.Confirmation
 }
 
 func (instance *Amqp) Publish(data map[string]interface{}) {
@@ -32,14 +32,14 @@ func (instance *Amqp) Publish(data map[string]interface{}) {
 			Headers:         amqp.Table{},
 			ContentType:     "text/plain",
 			ContentEncoding: "",
-			Body:            []byte(body),
-			DeliveryMode:    amqp.Transient, // 1=non-persistent, 2=persistent
-			Priority:        0,              // 0-9
-			// a bunch of application/implementation-specific fields
+			Body:            body,
+			DeliveryMode:    amqp.Persistent,
+			Priority:        0,
 		},
 	); err != nil {
 		log.Fatal(err)
 	}
+	confirmOne(instance.confirmChannel)
 }
 
 var instances map[string]*Amqp
@@ -56,7 +56,7 @@ func Publisher(configuration map[string]string) *Amqp {
 	var once sync.Once
 	once.Do(func() {
 		host, user, password, port := configuration["host"], configuration["user"], configuration["password"], configuration["port"]
-		exchange, exchangeType := configuration["exchange"], configuration["exchange_type"]
+		exchange, exchangeType, queue := configuration["exchange"], configuration["exchange_type"], configuration["queue"]
 		connStr := fmt.Sprintf("amqp://%s:%s@%s:%s/", user, password, host, port)
 		connection, err := amqp.Dial(connStr)
 		if err != nil {
@@ -67,7 +67,14 @@ func Publisher(configuration map[string]string) *Amqp {
 			log.Fatal(err)
 		}
 		exchangeDeclare(channel, exchange, exchangeType)
-		instances[configurationHash] = &Amqp{connection, channel, configuration}
+		queueDeclare(channel, queue)
+		bind(channel, queue, exchange)
+		if err := channel.Confirm(false); err != nil {
+			log.Fatal(err)
+		}
+		confirmationChannel := make(chan amqp.Confirmation, 1)
+		confirms := channel.NotifyPublish(confirmationChannel)
+		instances[configurationHash] = &Amqp{connection, channel, configuration, confirms}
 	})
 	return instances[configurationHash]
 }
@@ -84,4 +91,24 @@ func exchangeDeclare(channel *amqp.Channel, exchange string, exchangeType string
 	); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func queueDeclare(channel *amqp.Channel, queue string) {
+	_, err := channel.QueueDeclare(queue, true, false, false, false, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func bind(channel *amqp.Channel, queue string, exchange string) {
+	channel.QueueBind(queue, queue, exchange, false, nil)
+}
+
+func confirmOne(confirms <-chan amqp.Confirmation) {
+	confirmed := <-confirms
+	if confirmed.Ack {
+		log.Printf("confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
+		return
+	}
+	log.Printf("failed delivery of delivery tag: %d", confirmed.DeliveryTag)
 }

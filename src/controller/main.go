@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"serqol/go-demo/graylog"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +15,7 @@ func Instance() *Main {
 }
 
 func (controller Main) Show(c *gin.Context) {
+	graylog.Log("data is kewl", nil)
 	controller.Base.render(c, gin.H{
 		"title": "Hello, me",
 	}, "index.html")
