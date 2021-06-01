@@ -10,6 +10,6 @@ func Log(message string, data map[string]interface{}) {
 		data = make(map[string]interface{})
 	}
 	data["message"] = message
-	body := utils.ToJson(data)
+	body := utils.ToJson(data) + "\n"
 	fmt.Printf(body)
 }

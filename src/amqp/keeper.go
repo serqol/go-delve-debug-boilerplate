@@ -3,6 +3,7 @@ package amqp
 import (
 	"fmt"
 	"log"
+	"serqol/go-demo/logging"
 	"serqol/go-demo/utils"
 	"sync"
 
@@ -103,8 +104,8 @@ func bind(channel *amqp.Channel, queue string, exchange string) {
 func confirmOne(confirms <-chan amqp.Confirmation) {
 	confirmed := <-confirms
 	if confirmed.Ack {
-		log.Printf("confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
+		logging.Log(fmt.Sprintf("confirmed delivery with delivery tag: %d", confirmed.DeliveryTag), nil)
 		return
 	}
-	log.Printf("failed delivery of delivery tag: %d", confirmed.DeliveryTag)
+	logging.Log(fmt.Sprintf("failed delivery of delivery tag: %d", confirmed.DeliveryTag), nil)
 }

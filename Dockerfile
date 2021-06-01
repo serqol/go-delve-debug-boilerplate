@@ -1,4 +1,4 @@
-FROM golang:1.15
+FROM golang:1.16.3
 
 RUN go get github.com/go-delve/delve/cmd/dlv
 

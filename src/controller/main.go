@@ -1,24 +1,19 @@
 package controller
 
 import (
-	"serqol/go-demo/logging"
+	"io/ioutil"
+	"net/http"
+	"serqol/go-demo/graylog"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Main struct {
-	Base *BaseController
-}
-
-func Instance() *Main {
-	return &Main{&BaseController{}}
-}
-
-func (controller Main) Show(c *gin.Context) {
-	logging.Log("tits are kewl", map[string]interface{}{
-		"log": "tits",
+func Show(c *gin.Context) {
+	body := c.Request.Body
+	x, _ := ioutil.ReadAll(body)
+	go graylog.LogRaw(x)
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "ok",
+		"error":   0,
 	})
-	controller.Base.render(c, gin.H{
-		"title": "Hello, me",
-	}, "index.html")
 }

@@ -3,11 +3,14 @@ package graylog
 import (
 	"serqol/go-demo/amqp"
 	"serqol/go-demo/utils"
+
+	"github.com/joho/godotenv"
 )
 
 var amqpInstance *amqp.Amqp
 
 func init() {
+	godotenv.Load(".env")
 	configuration := map[string]string{
 		"host":          utils.GetEnv("GRAYLOG_HOST", "rabbit"),
 		"user":          utils.GetEnv("GRAYLOG_USER", "guest"),
@@ -20,7 +23,15 @@ func init() {
 	amqpInstance = amqp.Publisher(configuration)
 }
 
-func Write(body []byte) (n int, err error) {
-	amqpInstance.Publish(body)
-	return 1, nil
+func LogRaw(message []byte) {
+	amqpInstance.Publish(message)
+}
+
+func Log(message string, data map[string]interface{}) {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+	data["message"] = message
+	body := utils.ToJson(data)
+	amqpInstance.Publish([]byte(body))
 }
